@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhujie.study.mybatis._03_MapperXML.UserMapper">
+    <select id="selectUsers" resultType="com.zhujie.study.mybatis._03_MapperXML.User">
+                SELECT id, username, hashedPassword
+                from some_table
+                WHERE id = #{id}
+        </select>
+
+    <select id="selectUsers2" resultType="User">
+                SELECT id, username, hashedPassword
+                from some_table
+                WHERE id = #{id}
+        </select>
+
+    <select id="selectUsers3" resultType="User">
+                SELECT
+                user_id as "id",
+                user_name as "userName",
+                hashed_password as "hashedPassword"
+                from some_table
+                WHERE id = #{id}
+        </select>
+
+    <resultMap id="userResultMap" type="User">
+        <id property="id" column="user_id"/>
+        <result property="username" column="user_name"/>
+        <result property="password" column="hashed_password"/>
+    </resultMap>
+    <select id="selectUsers4" resultMap="userResultMap">
+                select user_id, user_name, hashed_password
+                from some_table
+                where id = #{id}
+        </select>
+
+    <!-- Very Complex Statement -->
+    <select id="selectBlogDetails" resultMap="detailedBlogResultMap">
+                select
+                B.id as blog_id,
+                B.title as blog_title,
+                B.author_id as blog_author_id,
+                A.id as author_id,
+                A.username as author_username,
+                A.password as author_password,
+                A.email as author_email,
+                A.bio as author_bio,
+                A.favourite_section as author_favourite_section,
+                P.id as post_id,
+                P.blog_id as post_blog_id,
+                P.author_id as post_author_id,
+                P.created_on as post_created_on,
+                P.section as post_section,
+                P.subject as post_subject,
+                P.draft as draft,
+                P.body as post_body,
+                C.id as comment_id,
+                C.post_id as comment_post_id,
+                C.name as comment_name,
+                C.comment as comment_text,
+                T.id as tag_id,
+                T.name as tag_name
+                from Blog B
+                left outer join Author A on B.author_id = A.id
+                left outer join Post P on B.id = P.blog_id
+                left outer join Comment C on P.id = C.post_id
+                left outer join Post_Tag PT on PT.post_id = P.id
+                left outer join Tag T on PT.tag_id = T.id
+                where B.id = #{id}
+        </select>
+
+    <!-- Very Complex Result Map -->
+    <resultMap id="detailedBlogResultMap" type="Blog">
+        <constructor>
+            <idArg column="blog_id" javaType="int"/>
+        </constructor>
+        <result property="title" column="blog_title"/>
+        <association property="author" javaType="Author">
+            <id property="id" column="author_id"/>
+            <result property="username" column="author_username"/>
+            <result property="password" column="author_password"/>
+            <result property="email" column="author_email"/>
+            <result property="bio" column="author_bio"/>
+            <result property="favouriteSection" column="author_favourite_section"/>
+        </association>
+        <collection property="posts" ofType="Post">
+            <id property="id" column="post_id"/>
+            <result property="subject" column="post_subject"/>
+            <association property="author" javaType="Author"/>
+            <collection property="comments" ofType="Comment">
+                <id property="id" column="comment_id"/>
+            </collection>
+            <collection property="tags" ofType="Tag">
+                <id property="id" column="tag_id"/>
+            </collection>
+            <discriminator javaType="int" column="draft">
+                <case value="1" resultType="DraftPost"/>
+            </discriminator>
+        </collection>
+    </resultMap>
+
+    <!-- association -->
+    <select id="selectBlog" resultMap="blogResult">
+                select
+                B.id            as blog_id,
+                B.title         as blog_title,
+                B.author_id     as blog_author_id,
+                A.id            as author_id,
+                A.username      as author_username,
+                A.password      as author_password,
+                A.email         as author_email,
+                A.bio           as author_bio
+                from Blog B left outer join Author A on B.author_id = A.id
+                where B.id = #{id}
+        </select>
+    <resultMap id="blogResult" type="Blog">
+        <id property="id" column="blog_id"/>
+        <result property="title" column="blog_title"/>
+        <association property="author" column="blog_author_id" javaType="Author" resultMap="authorResult"/>
+    </resultMap>
+    <resultMap id="authorResult" type="Author">
+        <id property="id" column="author_id"/>
+        <result property="username" column="author_username"/>
+        <result property="password" column="author_password"/>
+        <result property="email" column="author_email"/>
+        <result property="bio" column="author_bio"/>
+    </resultMap>
+    <resultMap id="blogResult2" type="Blog">
+        <id property="id" column="blog_id"/>
+        <result property="title" column="blog_title"/>
+        <association property="author" javaType="Author">
+            <id property="id" column="author_id"/>
+            <result property="username" column="author_username"/>
+            <result property="password" column="author_password"/>
+            <result property="email" column="author_email"/>
+            <result property="bio" column="author_bio"/>
+        </association>
+    </resultMap>
+
+    <!-- Collection-->
+    <resultMap id="blogResult" type="Blog">
+        <collection property="posts" javaType="ArrayList" column="id" ofType="Post" select="selectPostsForBlog"/>
+    </resultMap>
+    <select id="selectBlog" resultMap="blogResult">
+                SELECT * FROM BLOG WHERE ID = #{id}
+        </select>
+
+    <select id="selectPostsForBlog" resultType="Blog">
+                SELECT * FROM POST WHERE BLOG_ID = #{id}
+        </select>
+
+    <select id="selectBlog" resultMap="blogResult">
+                select
+                B.id as blog_id,
+                B.title as blog_title,
+                B.author_id as blog_author_id,
+                P.id as post_id,
+                P.subject as post_subject,
+                P.body as post_body,
+                from Blog B
+                left outer join Post P on B.id = P.blog_id
+                where B.id = #{id}
+        </select>
+
+    <!-- Discriminator-->
+    <resultMap id="vehicleResult" type="Vehicle">
+        <id property="id" column="id"/>
+        <result property="vin" column="vin"/>
+        <result property="year" column="year"/>
+        <result property="make" column="make"/>
+        <result property="model" column="model"/>
+        <result property="color" column="color"/>
+        <discriminator javaType="int" column="vehicle_type">
+            <case value="1" resultMap="carResult"/>
+            <case value="2" resultMap="truckResult"/>
+            <case value="3" resultMap="vanResult"/>
+            <case value="4" resultMap="suvResult"/>
+        </discriminator>
+    </resultMap>
+    <resultMap id="carResult" type="Car">
+        <result property="doorCount" column="door_count"/>
+    </resultMap>
+    <resultMap id="carResult2" type="Car" extends="vehicleResult">
+        <result property="doorCount" column="door_count"/>
+    </resultMap>
+    <resultMap id="vehicleResult" type="Vehicle">
+        <id property="id" column="id"/>
+        <result property="vin" column="vin"/>
+        <result property="year" column="year"/>
+        <result property="make" column="make"/>
+        <result property="model" column="model"/>
+        <result property="color" column="color"/>
+        <discriminator javaType="int" column="vehicle_type">
+            <case value="1" resultType="carResult">
+                <result property="doorCount" column="door_count"/>
+            </case>
+            <case value="2" resultType="truckResult">
+                <result property="boxSize" column="box_size"/>
+                <result property="extendedCab" column="extended_cab"/>
+            </case>
+            <case value="3" resultType="vanResult">
+                <result property="powerSlidingDoor" column="power_sliding_door"/>
+            </case>
+            <case value="4" resultType="suvResult">
+                <result property="allWheelDrive" column="all_wheel_drive"/>
+            </case>
+        </discriminator>
+    </resultMap>
+
+    <!-- Auto Mapping-->
+    <select id="selectUsers" resultMap="userResultMap">
+                SELECT
+                user_id as "id",
+                user_name as "userName",
+                hashed_password
+                from some_table
+                where id = #{id}
+        </select>
+    <resultMap id="userResultMap" type="User">
+        <result property="password" column="hashed_password"/>
+    </resultMap>
+
+    <!-- Cache -->
+    <cache eviction="FIFO" flushInterval="60000" size="512" readOnly="true"/>
+    <cache type="com.domain.something.MyCustomCache">
+        <property name="cacheFile" value="/tmp/my-custom-cache.tmp"/>
+    </cache>
+    <select id="a" flushCache="false" useCache="true"/>
+    <insert id="b" flushCache="true"/>
+    <update id="c" flushCache="true"/>
+    <delete id="d" flushCache="true"/>
+    <cache-ref namespace="com.someone.application.data.SomeMapper"/>
+</mapper>

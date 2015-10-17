@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhujie.study.mybatis._01_GettingStarted.BlogMapper">
+    <select id="selectPerson"
+            parameterType="int"
+            parameterMap="deprecated"
+            resultType="hashmap"
+            resultMap="personResultMap"
+            flushCache="false"
+            useCache="true"
+            timeout="10000"
+            fetchSize="256"
+            statementType="PREPARED"
+            resultSetType="FORWARD_ONLY">
+                SELECT * FROM PERSON WHERE ID = #{id}
+    </select>
+
+    <insert id="insertAuthor" useGeneratedKeys="true" keyProperty="id">
+        insert into Author (id,username,password,email,bio)
+        values (#{id},#{username},#{password},#{email},#{bio})
+    </insert>
+    <insert id="insertAuthor2">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT CAST (RANDOM()*1000000 as INTEGER) a from SYSIBM.SYSDUMMY1
+        </selectKey>
+        insert into Author (id,username,password,email,bio,favourite_section)
+        values (#{id},#{username},#{password},#{email},#{bio},#{favouriteSection,jdbcType=VARCHAR})
+    </insert>
+    <update id="updateAuthor">
+        update Author SET
+        username = #{username},
+        password = #{password},
+        email = #{email},
+        bio = #{bio}
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteAuthor">
+        delete from Author where id = #{id}
+    </delete>
+
+    <!-- SQL -->
+    <sql id="userColumns">
+         ${alias}.id,${alias}.username,${alias}.password
+    </sql>
+    <select id="selectUsers" resultType="map">
+        SELECT
+        <include refid="userColumns">
+            <property name="alias" value="t1"/>
+        </include>
+        <include refid="userColumns">
+            <property name="alias" value="t2"/>
+        </include>
+        FROM some_table t1
+        cross join some_table t2
+    </select>
+    <sql id="sometable">
+        ${prefix}Table
+    </sql>
+    <sql id="someinclude">
+        FROM
+        <include refid="${include_target}"/>
+    </sql>
+    <select id="select" resultType="map">
+        SELECT
+        field1,field2,field3
+        <include refid="someinclude">
+            <property name="prefix" value="Some"/>
+            <property name="include_target" value="sometable"/>
+        </include>
+    </select>
+
+    <!-- Parameters -->
+    <select id="selectUsers" resultType="User">
+        select id, username, password
+        from users
+        WHERE id = #{id}
+    </select>
+    <insert id="insertUser" parameterType="User">
+        insert into users(id, username, password)
+        values (#{id},#{username},#{password})
+    </insert>
+    <insert id="insertUser2" parameterType="User">
+        INSERT INTO users()
+        VALUES (
+          #{property,javaType=int,jdbcType=NUMERIC},
+          #{age,javaType=int,jdbcType=NUMERIC,typeHandler=MyTypeHandler},
+          #{height,javaType=double,jdbcType=NUMERIC,numericScale=2},
+          #{department,mode=OUT,javaType=ResultSet,jdbcType=CURSOR,resultMap=departmentResultMap},
+          #{middleINitial,mode=OUT,javaType=STRUCT,jdbcType=MY_TYPE,resultMap=departmentResultMap}
+        )
+    </insert>
+
+    <!-- Result Maps-->
+</mapper>

@@ -1,10 +1,13 @@
 package com.zhujie.study.mybatis._01_GettingStarted;
 
+import org.apache.ibatis.type.Alias;
+
 import java.util.Date;
 
 /**
  * Created by zhujie on 15/9/25.
  */
+@Alias("blog")
 public class Blog {
     private Long id;
     private String name;
